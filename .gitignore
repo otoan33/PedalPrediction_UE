@@ -1,0 +1,12 @@
+00_drivingdata/
+01_drv_table/
+01_drv_table_combined/
+02_drv_table_classified/
+02_drv_table_combined/
+03_pedal_predictor/
+
+10_Analysis_drv_table/figures_02_distribution/
+11_WLTC_compare/figures_01_WLTCcompare/
+12_Classify_model_evaluation/figures_01_evaluate_classify_model/
+23_figure_pedal_predictor/
+24_figure_Error/
