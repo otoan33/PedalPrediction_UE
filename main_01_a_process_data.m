@@ -17,6 +17,15 @@ if Course_Number == 1
     Precar1_input = "./map_data/map_UE_1_Precar1.xlsx";
     Precar1_trigger = [0,0];
     Precar1_Speed = [40, 30, 45];
+    Precar2_input = "./map_data/map_UE_1_Precar2.xlsx";
+    Precar2_trigger = [1000,1000];
+    Precar2_Speed = [60, 45, 45];
+    Precar3_input = "./map_data/map_UE_1_Precar3.xlsx";
+    Precar3_trigger = [407.5,490.6];
+    Precar3_Speed = [35, 40, 40];
+    Precar4_input = "./map_data/map_UE_1_Precar4.xlsx";
+    Precar4_trigger = [10,700];
+    Precar4_Speed = [20, 30, 45];
 elseif Course_Number == 2
     [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/0921_2/*.csv");
     input_dir = "./00_drivingdata/";
@@ -45,6 +54,9 @@ for num = 1 : file_num
     driving_data = readtable(input_dir + input_file_name);
     map_data = readtable(map_input);
     Precar1 = readtable(Precar1_input);
+    Precar2 = readtable(Precar2_input);
+    Precar3 = readtable(Precar3_input);
+    Precar4 = readtable(Precar4_input);
 
     %% Replace the initial value of time with zero
     drv_table = table;
@@ -125,7 +137,11 @@ for num = 1 : file_num
     %% caluculate distance to preceding car
     disp("Start Calc D_precar")
     isStarted_Precar1 = false;
+    isStarted_Precar2 = false;
+    isStarted_Precar3 = false;
+    isStarted_Precar4 = false;
     for i = 1 : height(drv_table)
+        %% PrecedingCar 1 %%
         if (~isStarted_Precar1) & abs(driving_data.Xo(i)-Precar1_trigger(1)) + abs(driving_data.Yo(i)-Precar1_trigger(2)) < 15
             isStarted_Precar1 =true;
             T0_Precar1 = i-1;
@@ -145,9 +161,63 @@ for num = 1 : file_num
                 isStarted_Precar1 = false;
             end
         end
+
+        %% PrecedingCar 2 %%
+        if (~isStarted_Precar2) & abs(driving_data.Xo(i)-Precar2_trigger(1)) + abs(driving_data.Yo(i)-Precar2_trigger(2)) < 15
+            isStarted_Precar2 =true;
+            T0_Precar2 = i-1;
+        end
+
+        if isStarted_Precar2
+            if drv_table.Road_num(i) == 11
+                drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
+                drv_table.Speed_P(i) = Precar2_Speed(1);
+            elseif drv_table.Road_num(i) == 12
+                drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
+                drv_table.Speed_P(i) = Precar2_Speed(2);
+            elseif drv_table.Road_num(i) == 13
+                isStarted_Precar2 = false;
+            end
+        end
+
+        %% PrecedingCar 3 %%
+        if (~isStarted_Precar3) & abs(driving_data.Xo(i)-Precar3_trigger(1)) + abs(driving_data.Yo(i)-Precar3_trigger(2)) < 15
+            isStarted_Precar3 =true;
+            T0_Precar3 = i-1;
+        end
+
+        if isStarted_Precar3
+            if drv_table.Road_num(i) == 8
+                drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (drv_table.X(i)-398.3);
+                drv_table.Speed_P(i) = Precar3_Speed(1);
+            elseif drv_table.Road_num(i) == 9
+                drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (250 - drv_table.Y(i) - 488.8);
+                drv_table.Speed_P(i) = Precar3_Speed(2);
+            elseif drv_table.Road_num(i) == 10
+                isStarted_Precar3 = false;
+            end
+        end
+
+        %% PrecedingCar 4 %%
+        if (~isStarted_Precar4) & abs(driving_data.Xo(i)-Precar4_trigger(1)) + abs(driving_data.Yo(i)-Precar4_trigger(2)) < 15
+            isStarted_Precar4 =true;
+            T0_Precar4 = i-1;
+        end
+
+        if isStarted_Precar4
+            if drv_table.Road_num(i) == 5
+                drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (-drv_table.Y(i)-686.5);
+                drv_table.Speed_P(i) = Precar4_Speed(1);
+            elseif drv_table.Road_num(i) == 6
+                drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (315.3 + drv_table.X(i) - 1.8);
+                drv_table.Speed_P(i) = Precar4_Speed(2);
+            elseif drv_table.Road_num(i) == 7
+                isStarted_Precar4 = false;
+            end
+        end
     end
 
-    clearvars i isStarted_Precar1 T0_Precar1
+    clearvars i isStarted_Precar1 T0_Precar1 isStarted_Precar2 T0_Precar2 isStarted_Precar3 T0_Precar3 isStarted_Precar4 T0_Precar4
 
     % figure
     % scatter(drv_table.Time, drv_table.Road_num)
