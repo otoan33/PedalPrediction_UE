@@ -11,8 +11,8 @@ Course_Number = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if Course_Number == 1
-    [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/*.csv");
-    input_dir = "./00_drivingdata/";
+    [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/UE1/Driver_01/*.csv");
+    input_dir = "./00_drivingdata/UE1/Driver_01/";
     map_input = "./map_data/map_UE_1.xlsx";
     Precar1_input = "./map_data/map_UE_1_Precar1.xlsx";
     Precar1_trigger = [0,0];
