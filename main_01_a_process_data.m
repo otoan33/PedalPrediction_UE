@@ -11,20 +11,20 @@ Course_Number = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if Course_Number == 1
-    [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/UE1/Driver_01/*.csv");
-    input_dir = "./00_drivingdata/UE1/Driver_01/";
+    [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/UE1/Driver_0*/*.csv");
+    %input_dir = "./00_drivingdata/UE1/Driver_01/";
     map_input = "./map_data/map_UE_1.xlsx";
     Precar1_input = "./map_data/map_UE_1_Precar1.xlsx";
     Precar1_trigger = [0,0];
     Precar1_Speed = [40, 30, 45];
     Precar2_input = "./map_data/map_UE_1_Precar2.xlsx";
-    Precar2_trigger = [1000,1000];
-    Precar2_Speed = [60, 45, 45];
+    Precar2_trigger = [1000,-1000];
+    Precar2_Speed = [20, 45, 60];
     Precar3_input = "./map_data/map_UE_1_Precar3.xlsx";
-    Precar3_trigger = [407.5,490.6];
+    Precar3_trigger = [407.5,-490.6];
     Precar3_Speed = [35, 40, 40];
     Precar4_input = "./map_data/map_UE_1_Precar4.xlsx";
-    Precar4_trigger = [10,700];
+    Precar4_trigger = [10,-700];
     Precar4_Speed = [20, 30, 45];
 elseif Course_Number == 2
     [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/0921_2/*.csv");
@@ -42,16 +42,22 @@ end
 disp("File Number = " + file_num)
 disp(" ---------- Start Processing Data ---------- ")
 
+TimeLists = table;
+
 for num = 1 : file_num
 
     input_file_name = input_file_names(num);
+    tmp = dir("./00_drivingdata/UE1/Driver_0*/"+input_file_name);
+    input_dir = tmp.folder;
     output_file_name = "drv_table_" + extractBetween(input_file_name, "2021-",".csv") + ".csv";
+
+    clearvars tmp
 
     %% import driving data / map data
     disp("Input File : " + input_file_name)
     disp("Output File : " + output_file_name)
     disp("Map File : " + map_input)
-    driving_data = readtable(input_dir + input_file_name);
+    driving_data = readtable(input_dir + "/" + input_file_name);
     map_data = readtable(map_input);
     Precar1 = readtable(Precar1_input);
     Precar2 = readtable(Precar2_input);
@@ -79,6 +85,15 @@ for num = 1 : file_num
             if (curve_state == 0)
                 curve_state = 1;
             end
+            if road_num == 11
+                drv_table.Road_num(i) = 11;
+                road_num=12;
+                curve_state = 0;
+            elseif road_num == 13
+                drv_table.Road_num(i) = 13;
+                road_num=14;
+                curve_state = 0;
+            end
         else
             if (curve_state == 1)
                 curve_state = 0;
@@ -88,9 +103,6 @@ for num = 1 : file_num
                 end
             end
             drv_table.Road_num(i) = road_num;
-        end
-        if mod(i,1000)==0
-            disp(i)
         end
     end
 
@@ -104,9 +116,29 @@ for num = 1 : file_num
     drv_table.Steer_SW = driving_data.Steer_SW;
     drv_table.Speed = driving_data.Vx;
     drv_table.Accel = driving_data.Ax;
-    drv_table.Bk_Stat = driving_data.Bk_Stat;
+    if num>6
+        drv_table.Bk_Stat = driving_data.Pbk_Con > 0.25;
+        drv_table.Pbk_Con = driving_data.Pbk_Con;
+    end
     drv_table.X = driving_data.Xo;
     drv_table.Y = driving_data.Yo;
+
+
+    %% Edit Time %%%%%%%%
+
+    TimeList=table;
+    TimeList.drv_file_name = input_file_name;
+    TimeList.idx_start =  find(drv_table.Road_num==1,1,"first");
+    TimeList.idx_end =  find(drv_table.Road_num==14,1,"last");
+    TimeList.time_start = drv_table.Time(TimeList.idx_start);
+    TimeList.time_end = drv_table.Time(TimeList.idx_end);
+
+    drv_table = drv_table(TimeList.idx_start-40:TimeList.idx_end+40,:);
+    drv_table.Time = drv_table.Time-drv_table.Time(1);
+
+    TimeLists(num,:)=TimeList;
+
+    clearvars tmp a1
 
     %% caluculate distance to road boundary point
     %% SET V_lim
@@ -124,10 +156,14 @@ for num = 1 : file_num
         drv_table.Speed_lim(i) = map_data.vlim(drv_table.Road_num(i));
         drv_table.Speed_O1(i) = map_data.vo1(drv_table.Road_num(i));
         drv_table.Speed_O2(i) = map_data.vo2(drv_table.Road_num(i));
-        drv_table.distance_C(i) = abs(driving_data.Xo(i)-map_data.x(drv_table.Road_num(i))) + abs(driving_data.Yo(i)-map_data.y(drv_table.Road_num(i)));
-        if mod(i,1000)==0
-            disp(i)
+
+        drv_table.distance_C(i) = abs(drv_table.X(i)-map_data.x(drv_table.Road_num(i))) + abs(drv_table.Y(i)-map_data.y(drv_table.Road_num(i)));
+        if drv_table.Road_num(i) == 11
+            drv_table.distance_C(i) = drv_table.distance_C(i) + 498.2;
+        elseif drv_table.Road_num(i) == 13
+            drv_table.distance_C(i) = drv_table.distance_C(i) + 498.2;
         end
+
     end
 
     clearvars i
@@ -142,7 +178,7 @@ for num = 1 : file_num
     isStarted_Precar4 = false;
     for i = 1 : height(drv_table)
         %% PrecedingCar 1 %%
-        if (~isStarted_Precar1) & abs(driving_data.Xo(i)-Precar1_trigger(1)) + abs(driving_data.Yo(i)-Precar1_trigger(2)) < 15
+        if (~isStarted_Precar1) & abs(drv_table.X(i)-Precar1_trigger(1)) + abs(drv_table.Y(i)-Precar1_trigger(2)) < 15
             isStarted_Precar1 =true;
             T0_Precar1 = i-1;
         end
@@ -163,7 +199,7 @@ for num = 1 : file_num
         end
 
         %% PrecedingCar 2 %%
-        if (~isStarted_Precar2) & abs(driving_data.Xo(i)-Precar2_trigger(1)) + abs(driving_data.Yo(i)-Precar2_trigger(2)) < 15
+        if (~isStarted_Precar2) & abs(drv_table.X(i)-Precar2_trigger(1)) + abs(drv_table.Y(i)-Precar2_trigger(2)) < 15
             isStarted_Precar2 =true;
             T0_Precar2 = i-1;
         end
@@ -171,17 +207,20 @@ for num = 1 : file_num
         if isStarted_Precar2
             if drv_table.Road_num(i) == 11
                 drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
-                drv_table.Speed_P(i) = Precar2_Speed(1);
+                drv_table.Speed_P(i) = Precar2_Speed(2);
+                if Precar2.S(i - T0_Precar2) > 314.5
+                    drv_table.Speed_P(i) = Precar2_Speed(3);
+                end
             elseif drv_table.Road_num(i) == 12
                 drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
-                drv_table.Speed_P(i) = Precar2_Speed(2);
+                drv_table.Speed_P(i) = Precar2_Speed(3);
             elseif drv_table.Road_num(i) == 13
                 isStarted_Precar2 = false;
             end
         end
 
         %% PrecedingCar 3 %%
-        if (~isStarted_Precar3) & abs(driving_data.Xo(i)-Precar3_trigger(1)) + abs(driving_data.Yo(i)-Precar3_trigger(2)) < 15
+        if (~isStarted_Precar3) & abs(drv_table.X(i)-Precar3_trigger(1)) + abs(drv_table.Y(i)-Precar3_trigger(2)) < 15
             isStarted_Precar3 =true;
             T0_Precar3 = i-1;
         end
@@ -199,18 +238,18 @@ for num = 1 : file_num
         end
 
         %% PrecedingCar 4 %%
-        if (~isStarted_Precar4) & abs(driving_data.Xo(i)-Precar4_trigger(1)) + abs(driving_data.Yo(i)-Precar4_trigger(2)) < 15
-            isStarted_Precar4 =true;
+        if (~isStarted_Precar4) & abs(drv_table.X(i)-Precar4_trigger(1)) + abs(drv_table.Y(i)-Precar4_trigger(2)) < 15
+            isStarted_Precar4 = true;
             T0_Precar4 = i-1;
         end
 
         if isStarted_Precar4
             if drv_table.Road_num(i) == 5
                 drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (-drv_table.Y(i)-686.5);
-                drv_table.Speed_P(i) = Precar4_Speed(1);
+                drv_table.Speed_P(i) = Precar4_Speed(2);
             elseif drv_table.Road_num(i) == 6
                 drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (315.3 + drv_table.X(i) - 1.8);
-                drv_table.Speed_P(i) = Precar4_Speed(2);
+                drv_table.Speed_P(i) = Precar4_Speed(3);
             elseif drv_table.Road_num(i) == 7
                 isStarted_Precar4 = false;
             end
@@ -285,7 +324,7 @@ for num = 1 : file_num
     % % plot(T{1,5}.Time,T{1,5}.Thr_dif_50)
     % % hold off
 
-    writetable(drv_table, "./01_drv_table/" + output_file_name)
+    writetable(drv_table, "./01_drv_table/" + extractAfter(input_dir, '00_drivingdata\') + "/" + output_file_name)
     disp("writetable drv_table to output csv file")
     disp(" ------ Finished  " + num + " / "+ file_num + "---------")
 
@@ -297,9 +336,10 @@ for num = 1 : file_num
     % % figure
     % % gscatter(drv_table.Speed, drv_table.Thr, drv_table.Road_num)
 
-    clearvars -except map_data input_file_names file_num num input_dir map_input Course_Number  Precar1_input Precar1_Speed
-
+    clearvars -except map_data input_file_names file_num num input_dir map_input Course_Number Precar1_input Precar1_Speed Precar1_trigger Precar2_input Precar2_Speed Precar2_trigger Precar3_input Precar3_Speed Precar3_trigger Precar4_input Precar4_Speed Precar4_trigger TimeLists
 end
+
+writetable(TimeLists,"./01_drv_table/UE1/UE1_TimeList.csv")
 
 % clearvars num input_dir map_input Course_Number map_data input_file_names file_num
 
