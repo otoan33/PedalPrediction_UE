@@ -6,7 +6,7 @@ addpath("tools","function")
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Course_Number = 1;
+Course_Number = 2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -28,19 +28,19 @@ if Course_Number == 1
     Precar4_Speed = [20, 30, 45];
 elseif Course_Number == 2
     [ input_file_names , file_num ]= dir_FileNames("00_drivingdata/UE2/Driver_0*/*.csv");
-    map_input = "./map_data/map_UE_1.xlsx";
-    % Precar1_input = "./map_data/map_UE_1_Precar1.xlsx";
-    % Precar1_trigger = [0,0];
-    % Precar1_Speed = [40, 30, 45];
-    % Precar2_input = "./map_data/map_UE_1_Precar2.xlsx";
-    % Precar2_trigger = [1000,-1000];
-    % Precar2_Speed = [20, 45, 60];
-    % Precar3_input = "./map_data/map_UE_1_Precar3.xlsx";
-    % Precar3_trigger = [407.5,-490.6];
-    % Precar3_Speed = [35, 40, 40];
-    % Precar4_input = "./map_data/map_UE_1_Precar4.xlsx";
-    % Precar4_trigger = [10,-700];
-    % Precar4_Speed = [20, 30, 45];
+    map_input = "./map_data/map_UE_2.xlsx";
+    Precar1_input = "./map_data/map_UE_2_Precar1.xlsx";
+    Precar1_trigger = [200,-400];
+    Precar1_Speed = [30, 30, 30];
+    Precar2_input = "./map_data/map_UE_2_Precar2.xlsx";
+    Precar2_trigger = [648.2,-1000];
+    Precar2_Speed = [50, 50, 70];
+    Precar3_input = "./map_data/map_UE_2_Precar3.xlsx";
+    Precar3_trigger = [407.5,-1001.8];
+    Precar3_Speed = [40, 40, 30];
+    Precar4_input = "./map_data/map_UE_2_Precar4.xlsx";
+    Precar4_trigger = [998.2,-1.8];
+    Precar4_Speed = [60, 50, 65];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,7 +55,7 @@ disp(" ---------- Start Processing Data ---------- ")
 
 TimeLists = table;
 
-for num = 1 : 2%file_num
+for num = 1 : file_num
 
     input_file_name = input_file_names(num);
     tmp = dir("./00_drivingdata/UE*/Driver_0*/"+input_file_name);
@@ -68,10 +68,10 @@ for num = 1 : 2%file_num
     disp("Input File : " + input_file_name)
     disp("Output File : " + output_file_name)
     disp("Map File : " + map_input)
-    if dir_FileExist("./01_drv_table/UE2/Driver_0*/", output_file_name)
-        disp("Already Pcocessed")
-        continue
-    end
+    % if dir_FileExist("./01_drv_table/UE2/Driver_0*/", output_file_name)
+    %     disp("Already Pcocessed")
+    %     continue
+    % end
     driving_data = readtable(input_dir + "/" + input_file_name);
     map_data = readtable(map_input);
     Precar1 = readtable(Precar1_input);
@@ -209,89 +209,175 @@ for num = 1 : 2%file_num
 
     %% caluculate distance to preceding car
     disp("Start Calc D_precar")
-    isStarted_Precar1 = false;
-    isStarted_Precar2 = false;
-    isStarted_Precar3 = false;
-    isStarted_Precar4 = false;
-    for i = 1 : height(drv_table)
-        %% PrecedingCar 1 %%
-        if (~isStarted_Precar1) & abs(drv_table.X(i)-Precar1_trigger(1)) + abs(drv_table.Y(i)-Precar1_trigger(2)) < 15
-            isStarted_Precar1 =true;
-            T0_Precar1 = i-1;
-        end
-
-        if isStarted_Precar1
-            if drv_table.Road_num(i) == 1
-                drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (-drv_table.Y(i)-1.8);
-                drv_table.Speed_P(i) = Precar1_Speed(1);
-            elseif drv_table.Road_num(i) == 2
-                drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (396.4 + drv_table.X(i) - 1.8);
-                drv_table.Speed_P(i) = Precar1_Speed(2);
-            elseif drv_table.Road_num(i) == 3
-                drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (596.4 - drv_table.Y(i) - 398.2);
-                drv_table.Speed_P(i) = Precar1_Speed(3);
-            elseif drv_table.Road_num(i) == 4
-                isStarted_Precar1 = false;
+    if Course_Number == 1
+        isStarted_Precar1 = false;
+        isStarted_Precar2 = false;
+        isStarted_Precar3 = false;
+        isStarted_Precar4 = false;
+        for i = 1 : height(drv_table)
+            %% PrecedingCar 1 %%
+            if (~isStarted_Precar1) & abs(drv_table.X(i)-Precar1_trigger(1)) + abs(drv_table.Y(i)-Precar1_trigger(2)) < 15
+                isStarted_Precar1 =true;
+                T0_Precar1 = i-1;
             end
-        end
 
-        %% PrecedingCar 2 %%
-        if (~isStarted_Precar2) & abs(drv_table.X(i)-Precar2_trigger(1)) + abs(drv_table.Y(i)-Precar2_trigger(2)) < 15
-            isStarted_Precar2 =true;
-            T0_Precar2 = i-1;
-        end
-
-        if isStarted_Precar2
-            if drv_table.Road_num(i) == 11
-                drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
-                drv_table.Speed_P(i) = Precar2_Speed(2);
-                if Precar2.S(i - T0_Precar2) > 314.5
-                    drv_table.Speed_P(i) = Precar2_Speed(3);
+            if isStarted_Precar1
+                if drv_table.Road_num(i) == 1
+                    drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (-drv_table.Y(i)-1.8);
+                    drv_table.Speed_P(i) = Precar1_Speed(1);
+                elseif drv_table.Road_num(i) == 2
+                    drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (396.4 + drv_table.X(i) - 1.8);
+                    drv_table.Speed_P(i) = Precar1_Speed(2);
+                elseif drv_table.Road_num(i) == 3
+                    drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (596.4 - drv_table.Y(i) - 398.2);
+                    drv_table.Speed_P(i) = Precar1_Speed(3);
+                elseif drv_table.Road_num(i) == 4
+                    isStarted_Precar1 = false;
                 end
-            elseif drv_table.Road_num(i) == 12
-                drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
-                drv_table.Speed_P(i) = Precar2_Speed(3);
-            elseif drv_table.Road_num(i) == 13
-                isStarted_Precar2 = false;
+            end
+
+            %% PrecedingCar 2 %%
+            if (~isStarted_Precar2) & abs(drv_table.X(i)-Precar2_trigger(1)) + abs(drv_table.Y(i)-Precar2_trigger(2)) < 15
+                isStarted_Precar2 =true;
+                T0_Precar2 = i-1;
+            end
+
+            if isStarted_Precar2
+                if drv_table.Road_num(i) == 11
+                    drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
+                    drv_table.Speed_P(i) = Precar2_Speed(2);
+                    if Precar2.S(i - T0_Precar2) > 314.5
+                        drv_table.Speed_P(i) = Precar2_Speed(3);
+                    end
+                elseif drv_table.Road_num(i) == 12
+                    drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (1014.5 + drv_table.Y(i));
+                    drv_table.Speed_P(i) = Precar2_Speed(3);
+                elseif drv_table.Road_num(i) == 13
+                    isStarted_Precar2 = false;
+                end
+            end
+
+            %% PrecedingCar 3 %%
+            if (~isStarted_Precar3) & abs(drv_table.X(i)-Precar3_trigger(1)) + abs(drv_table.Y(i)-Precar3_trigger(2)) < 15
+                isStarted_Precar3 =true;
+                T0_Precar3 = i-1;
+            end
+
+            if isStarted_Precar3
+                if drv_table.Road_num(i) == 8
+                    drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (drv_table.X(i)-398.3);
+                    drv_table.Speed_P(i) = Precar3_Speed(1);
+                elseif drv_table.Road_num(i) == 9
+                    drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (250 - drv_table.Y(i) - 488.8);
+                    drv_table.Speed_P(i) = Precar3_Speed(2);
+                elseif drv_table.Road_num(i) == 10
+                    isStarted_Precar3 = false;
+                end
+            end
+
+            %% PrecedingCar 4 %%
+            if (~isStarted_Precar4) & abs(drv_table.X(i)-Precar4_trigger(1)) + abs(drv_table.Y(i)-Precar4_trigger(2)) < 15
+                isStarted_Precar4 = true;
+                T0_Precar4 = i-1;
+            end
+
+            if isStarted_Precar4
+                if drv_table.Road_num(i) == 5
+                    drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (-drv_table.Y(i)-686.5);
+                    drv_table.Speed_P(i) = Precar4_Speed(2);
+                elseif drv_table.Road_num(i) == 6
+                    drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (315.3 + drv_table.X(i) - 1.8);
+                    drv_table.Speed_P(i) = Precar4_Speed(3);
+                elseif drv_table.Road_num(i) == 7
+                    isStarted_Precar4 = false;
+                end
             end
         end
-
-        %% PrecedingCar 3 %%
-        if (~isStarted_Precar3) & abs(drv_table.X(i)-Precar3_trigger(1)) + abs(drv_table.Y(i)-Precar3_trigger(2)) < 15
-            isStarted_Precar3 =true;
-            T0_Precar3 = i-1;
-        end
-
-        if isStarted_Precar3
-            if drv_table.Road_num(i) == 8
-                drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (drv_table.X(i)-398.3);
-                drv_table.Speed_P(i) = Precar3_Speed(1);
-            elseif drv_table.Road_num(i) == 9
-                drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (250 - drv_table.Y(i) - 488.8);
-                drv_table.Speed_P(i) = Precar3_Speed(2);
-            elseif drv_table.Road_num(i) == 10
-                isStarted_Precar3 = false;
+    elseif Course_Number == 2
+        isStarted_Precar1 = false;
+        isStarted_Precar2 = false;
+        isStarted_Precar3 = false;
+        isStarted_Precar4 = false;
+        for i = 1 : height(drv_table)
+            %% PrecedingCar 1 %%
+            if (~isStarted_Precar1) & abs(drv_table.X(i)-Precar1_trigger(1)) + abs(drv_table.Y(i)-Precar1_trigger(2)) < 15
+                isStarted_Precar1 =true;
+                T0_Precar1 = i-1;
             end
-        end
 
-        %% PrecedingCar 4 %%
-        if (~isStarted_Precar4) & abs(drv_table.X(i)-Precar4_trigger(1)) + abs(drv_table.Y(i)-Precar4_trigger(2)) < 15
-            isStarted_Precar4 = true;
-            T0_Precar4 = i-1;
-        end
-
-        if isStarted_Precar4
-            if drv_table.Road_num(i) == 5
-                drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (-drv_table.Y(i)-686.5);
-                drv_table.Speed_P(i) = Precar4_Speed(2);
-            elseif drv_table.Road_num(i) == 6
-                drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (315.3 + drv_table.X(i) - 1.8);
-                drv_table.Speed_P(i) = Precar4_Speed(3);
-            elseif drv_table.Road_num(i) == 7
-                isStarted_Precar4 = false;
+            if isStarted_Precar1
+                if drv_table.Road_num(i) == 3
+                    drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (8.2 - drv_table.Y(i) - 398.2);
+                    drv_table.Speed_P(i) = Precar1_Speed(2);
+                elseif drv_table.Road_num(i) == 4
+                    drv_table.distance_P(i) = Precar1.S(i - T0_Precar1) - (310 + 200 - drv_table.X(i));
+                    drv_table.Speed_P(i) = Precar1_Speed(3);
+                elseif drv_table.Road_num(i) == 5
+                    isStarted_Precar1 = false;
+                end
             end
+            
+            %% PrecedingCar 2 %%
+            if (~isStarted_Precar2) & abs(drv_table.X(i)-Precar2_trigger(1)) + abs(drv_table.Y(i)-Precar2_trigger(2)) < 15
+                isStarted_Precar2 =true;
+                T0_Precar2 = i-1;
+            end
+
+            if isStarted_Precar2
+                if drv_table.Road_num(i) == 10
+                    drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (11.7 + drv_table.X(i) - 648.2);
+                    drv_table.Speed_P(i) = Precar2_Speed(1);
+                elseif drv_table.Road_num(i) == 11
+                    drv_table.distance_P(i) = Precar2.S(i - T0_Precar2) - (363.5 + 1001.8 + drv_table.Y(i));
+                    drv_table.Speed_P(i) = Precar2_Speed(2);
+                    if Precar2.S(i - T0_Precar2) > 663.5
+                        drv_table.Speed_P(i) = Precar2_Speed(3);
+                    end
+                elseif drv_table.Road_num(i) == 12
+                    isStarted_Precar2 = false;
+                end
+            end
+
+
+            %% PrecedingCar 3 %%
+            if (~isStarted_Precar3) & abs(drv_table.X(i)-Precar3_trigger(1)) + abs(drv_table.Y(i)-Precar3_trigger(2)) < 15
+                isStarted_Precar3 =true;
+                T0_Precar3 = i-1;
+            end
+
+            if isStarted_Precar3
+                if drv_table.Road_num(i) == 7
+                    drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (1013.2 + drv_table.Y(i));
+                    drv_table.Speed_P(i) = Precar3_Speed(2);
+                elseif drv_table.Road_num(i) == 8
+                    drv_table.distance_P(i) = Precar3.S(i - T0_Precar3) - (524.4 + drv_table.X(i) - 408.3);
+                    drv_table.Speed_P(i) = Precar3_Speed(3);
+                elseif drv_table.Road_num(i) == 9
+                    isStarted_Precar3 = false;
+                end
+            end
+
+            %% PrecedingCar 4 %%
+            if (~isStarted_Precar4) & abs(drv_table.X(i)-Precar4_trigger(1)) + abs(drv_table.Y(i)-Precar4_trigger(2)) < 15
+                isStarted_Precar4 = true;
+                T0_Precar4 = i-1;
+            end
+
+            if isStarted_Precar4
+                if drv_table.Road_num(i) == 13
+                    drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (1009.8 - drv_table.X(i));
+                    drv_table.Speed_P(i) = Precar4_Speed(2);
+                elseif drv_table.Road_num(i) == 14
+                    drv_table.distance_P(i) = Precar4.S(i - T0_Precar4) - (1009.8 - drv_table.X(i));
+                    drv_table.Speed_P(i) = Precar4_Speed(3);
+                elseif drv_table.Road_num(i) == 1
+                    isStarted_Precar4 = false;
+                end
+            end
+    
         end
     end
+
 
     clearvars i isStarted_Precar1 T0_Precar1 isStarted_Precar2 T0_Precar2 isStarted_Precar3 T0_Precar3 isStarted_Precar4 T0_Precar4
 

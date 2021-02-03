@@ -29,7 +29,7 @@ for num = 1:file_num
     ax_FontSize = 10;
     
 
-    h = figure('visible',false);
+    h = figure('visible',true);
 
     setFigureSize(maxW, maxH, 1.5, 2.4)
 
@@ -132,8 +132,8 @@ for num = 1:file_num
     legend('off')
     box on
 
-    saveas(gcf,"./21_figure_drv_table/UE1/Driving_0" + num + ".fig")
-    saveas(gcf,"./21_figure_drv_table/UE1/Driving_0" + num + ".png")
+    % saveas(gcf,"./21_figure_drv_table/UE1/Driving_0" + num + ".fig")
+    % saveas(gcf,"./21_figure_drv_table/UE1/Driving_0" + num + ".png")
 
 
 end
