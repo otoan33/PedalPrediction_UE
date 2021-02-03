@@ -15,8 +15,8 @@ disp("File Number = " + file_num)
 %Input_list = ["Thr","Speed","Accel","Thr_dif_pre_1000","Thr_dif_pre_500","Thr_dif_pre_200","distance_C"];
 Input_list = ["Time"	"Road_num"	"Include"	"Station"	"Thr"	"Steer_SW"	"Speed"	"Accel"	"Bk_Stat"	"X"	"Y"	"Thr_dif_pre_1000"	"Thr_dif_pre_500"	"Thr_dif_pre_200"	"Thr_dif_pre_100"	"Thr_dif_future_1000"	"Thr_dif_future_500"	"Thr_dif_future_200"	"Thr_dif_future_100"	"distance_C"	"RoadType"	"ExistPrecar"	"ExistO1"	"ExistO2"	"Speed_lim"	"Speed_O1"	"Speed_O2"	"distance_P"	"Speed_P"	"state"	"Stay_1000"	"Action_1000"	"Stay_500"	"Action_500"	"Stay_200"	"Action_200"	"Stay_100"	"Action_100"	"va"	"v2"	"vthr"	"difvlim"	"difvp"	"v2dc"	"v2dp"	"distance"	"difv"	"Change_1000"	"Change_500"	"Change_200"	"Change_100"];
 lavel_0 = readtable('./function/lavel_0.csv');
-% lavel_a = readtable('./function/lavel_a.csv');
-% lavel_r = readtable('./function/lavel_r.csv');
+lavel_a = readtable('./function/lavel_a.csv');
+lavel_r = readtable('./function/lavel_r.csv');
 
 %Target_list_0 = ["Stay_1000","Action_1000","Stay_500","Action_500","Stay_200","Action_200","Stay_100","Action_100"];
 Target_list_0 = ["Change_1000","Change_500","Change_200","Change_100"];
@@ -24,7 +24,7 @@ Target_list_ar = ["Thr_dif_future_1000","Thr_dif_future_500","Thr_dif_future_200
 
 
 disp(" ---------- Start Processing Data ---------- ")
-for condition = 2:10
+for condition = 1:10
     Input_list = ["Time"	"Road_num"	"Include"	"Station"	"Thr"	"Steer_SW"	"Speed"	"Accel"	"Bk_Stat"	"X"	"Y"	"Thr_dif_pre_1000"	"Thr_dif_pre_500"	"Thr_dif_pre_200"	"Thr_dif_pre_100"	"Thr_dif_future_1000"	"Thr_dif_future_500"	"Thr_dif_future_200"	"Thr_dif_future_100"	"distance_C"	"RoadType"	"ExistPrecar"	"ExistO1"	"ExistO2"	"Speed_lim"	"Speed_O1"	"Speed_O2"	"distance_P"	"Speed_P"	"state"	"Stay_1000"	"Action_1000"	"Stay_500"	"Action_500"	"Stay_200"	"Action_200"	"Stay_100"	"Action_100"	"va"	"v2"	"vthr"	"difvlim"	"difvp"	"v2dc"	"v2dp"	"distance"	"difv"	"Change_1000"	"Change_500"	"Change_200"	"Change_100"];
 
 
@@ -45,7 +45,7 @@ for condition = 2:10
 
 
     num_end = 8;
-    i_end = 1;
+    i_end = 3;
     j_end = 4;
 
 
@@ -113,19 +113,19 @@ for condition = 2:10
 
         drv_states = ["Accelerate","Cruise","Braking","Stop"];
         
-        for i = 1:i_end
+        for i = 3:i_end
             drv_data_train = drv_data_classified(drv_data_classified.state == drv_states(i),:);
             drv_data_test_state = drv_data_test(drv_data_test.state == drv_states(i),:);
 
             %%% Set parameter list %%%%%%%%%%%%
 
-            Input_param_0 = Input_list(lavel_0{condition,:}==1);
-            % Input_param_a = Input_list(lavel_a{i,:}==1);
-            % Input_param_r = Input_list(lavel_r{i,:}==1);
+            %Input_param_0 = Input_list(lavel_0{condition,:}==1);
+            Input_param_a = Input_list(lavel_a{i,:}==1);
+            Input_param_r = Input_list(lavel_r{i,:}==1);
 
-            len_param_0 = length(Input_param_0);
-            % len_param_a = length(Input_param_a);
-            % len_param_r = length(Input_param_r);
+            %len_param_0 = length(Input_param_0);
+            len_param_a = length(Input_param_a);
+            len_param_r = length(Input_param_r);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -134,22 +134,22 @@ for condition = 2:10
 
             for j = 1:j_end
                 
-                predictor_0 = drv_data_train{:,Input_param_0};
-                target = categorical(drv_data_train{:, Target_list_0(j)});
+                % predictor_0 = drv_data_train{:,Input_param_0};
+                % target = categorical(drv_data_train{:, Target_list_0(j)});
 
-                predictor_0_test = drv_data_test_state{:,Input_param_0};
-                target_test = categorical(drv_data_test_state{:, Target_list_0(j)});
+                % predictor_0_test = drv_data_test_state{:,Input_param_0};
+                % target_test = categorical(drv_data_test_state{:, Target_list_0(j)});
 
-                %% Train Classifier %%
+                % %% Train Classifier %%
 
-                [B{1,num}{i,j}, dev{1,num}{i,j}, stats{1,num}{i,j}] = mnrfit(predictor_0,target);
+                % [B{1,num}{i,j}, dev{1,num}{i,j}, stats{1,num}{i,j}] = mnrfit(predictor_0,target);
 
-                pihat = mnrval(B{1,num}{i,j},predictor_0);
-                Error{1,num}(i,j) = MULTICrossEntropyError(pihat, target);
+                % pihat = mnrval(B{1,num}{i,j},predictor_0);
+                % Error{1,num}(i,j) = MULTICrossEntropyError(pihat, target);
 
-                %% test %%
-                pihat_test = mnrval(B{1,num}{i,j},predictor_0_test);
-                Error_test{1,num}(i,j) = MULTICrossEntropyError(pihat_test, target_test);
+                % %% test %%
+                % pihat_test = mnrval(B{1,num}{i,j},predictor_0_test);
+                % Error_test{1,num}(i,j) = MULTICrossEntropyError(pihat_test, target_test);
 
                 % Z1= B{1,num}{i,j}(1,1) + predictor_0 * B{1,1}{i,j}(2:len_param_0+1,1);
                 % Z2= B{1,num}{i,j}(1,1) + predictor_0 * B{1,1}{i,j}(2:len_param_0+1,2);
@@ -160,32 +160,32 @@ for condition = 2:10
                 
                 %% Train Lenear Model %%
 
-                % drv_data_train_a = drv_data_train(drv_data_train{:,Target_list_0(j)}==1,:);
-                % drv_data_train_r = drv_data_train(drv_data_train{:,Target_list_0(j)}==0,:);
-                % predictor_a = drv_data_train_a{:,Input_param_a};
-                % predictor_r = drv_data_train_r{:,Input_param_r};
+                drv_data_train_a = drv_data_train(drv_data_train{:,Target_list_0(j)}==1,:);
+                drv_data_train_r = drv_data_train(drv_data_train{:,Target_list_0(j)}==0,:);
+                predictor_a = drv_data_train_a{:,Input_param_a};
+                predictor_r = drv_data_train_r{:,Input_param_r};
                 
-                % mdl_a{1,num}{i,j} = fitlm(predictor_a, drv_data_train_a{:, Target_list_ar(j)});
-                % mdl_r{1,num}{i,j} = fitlm(predictor_r, drv_data_train_r{:, Target_list_ar(j)});
+                mdl_a{1,num}{i,j} = fitlm(predictor_a, drv_data_train_a{:, Target_list_ar(j)});
+                mdl_r{1,num}{i,j} = fitlm(predictor_r, drv_data_train_r{:, Target_list_ar(j)});
 
-                % pred_a = predict(mdl_a{1,num}{i,j},predictor_a);
-                % pred_r = predict(mdl_r{1,num}{i,j},predictor_r);
+                pred_a = predict(mdl_a{1,num}{i,j},predictor_a);
+                pred_r = predict(mdl_r{1,num}{i,j},predictor_r);
 
-                % rsme_a{1,num}(i,j) = RMSE(pred_a, drv_data_train_a{:, Target_list_ar(j)});
-                % rsme_r{1,num}(i,j) = RMSE(pred_r, drv_data_train_r{:, Target_list_ar(j)});
+                rsme_a{1,num}(i,j) = RMSE(pred_a, drv_data_train_a{:, Target_list_ar(j)});
+                rsme_r{1,num}(i,j) = RMSE(pred_r, drv_data_train_r{:, Target_list_ar(j)});
 
 
-                % %% test %%
-                % drv_data_test_state_a = drv_data_test_state(drv_data_test_state{:,Target_list_0(j)}==1,:);
-                % drv_data_test_state_r = drv_data_test_state(drv_data_test_state{:,Target_list_0(j)}==0,:);
-                % predictor_a_test = drv_data_test_state_a{:,Input_param_a};
-                % predictor_r_test = drv_data_test_state_r{:,Input_param_r};
+                %% test %%
+                drv_data_test_state_a = drv_data_test_state(drv_data_test_state{:,Target_list_0(j)}==1,:);
+                drv_data_test_state_r = drv_data_test_state(drv_data_test_state{:,Target_list_0(j)}==0,:);
+                predictor_a_test = drv_data_test_state_a{:,Input_param_a};
+                predictor_r_test = drv_data_test_state_r{:,Input_param_r};
 
-                % pred_a_test = predict(mdl_a{1,num}{i,j},predictor_a_test);
-                % pred_r_test = predict(mdl_r{1,num}{i,j},predictor_r_test);
+                pred_a_test = predict(mdl_a{1,num}{i,j},predictor_a_test);
+                pred_r_test = predict(mdl_r{1,num}{i,j},predictor_r_test);
 
-                % rsme_a_test{1,num}(i,j) = RMSE(pred_a_test, drv_data_test_state_a{:, Target_list_ar(j)});
-                % rsme_r_test{1,num}(i,j) = RMSE(pred_r_test, drv_data_test_state_r{:, Target_list_ar(j)});
+                rsme_a_test{1,num}(i,j) = RMSE(pred_a_test, drv_data_test_state_a{:, Target_list_ar(j)});
+                rsme_r_test{1,num}(i,j) = RMSE(pred_r_test, drv_data_test_state_r{:, Target_list_ar(j)});
             
                 % figure
                 % plot_multiple_regression(pred_a, drv_data_train_a{:, Target_list_ar(j)}, "Driver : " + num + " , State : " + drv_states(i) + " , Target : " + Target_list_ar(j), height(drv_data_train_a), rsme_a{1,num}(i,j))
@@ -201,14 +201,14 @@ for condition = 2:10
 
 
     disp(" ----------- All Files Finished  ----------- ")
-    for num = 1  : num_end
-        for i = 1 : i_end
-            for j = 1 : j_end
-                a = find(stats{1,num}{i,j}.p(:,1)>0.05 |stats{1,num}{i,j}.p(:,2)>0.05);
-                disp(a.')
-            end
-        end
-    end
+    % for num = 1  : num_end
+    %     for i = 1 : i_end
+    %         for j = 1 : j_end
+    %             a = find(stats{1,num}{i,j}.p(:,1)>0.05 |stats{1,num}{i,j}.p(:,2)>0.05);
+    %             disp(a.')
+    %         end
+    %     end
+    % end
 
     a = readtable("Error.xlsx");
     for num = 1  : num_end
@@ -223,7 +223,7 @@ for condition = 2:10
 
     clearvars -except B dev stats mdl_a mdl_r Error rsme_a rsme_r Error_test rsme_a_test rsme_r_test lavel_0 lavel_a lavel_r condition input_file_names file_num
 
-    filename = "./04_pedal_predictor/predictor_d40_v3_00"+string(condition+6)+".mat"
+    filename = "./04_pedal_predictor/predictor_d40_v3_brk_a_00"+string(condition)+".mat"
 
     save(filename)
 end
